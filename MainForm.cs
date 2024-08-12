@@ -337,6 +337,7 @@ namespace LogvideoRecorderWinformsAndWebview2
                     <li>A lot of hard disk space is temporarily used to create the video that includes the mouse pointer. </li>
                     <li>The zoom setting can be changed with Ctrl/Strg + mouse wheel. It is reset to 1.0 via the ""↔ ↕""-button. </li>
                     <li>All timestamps are ""ticks"". The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001 in the Gregorian calendar, which represents MinValue.</li>
+                    <li>Video creation takes a particularly long time the first time the program is called up, as the necessary program component (ffmpeg) must first be downloaded once. </li>
                   </ul>
             </body>
         </html>";
@@ -697,7 +698,7 @@ namespace LogvideoRecorderWinformsAndWebview2
 
         private static async Task CreateVideoWithMouse()
         {
-            List<Tuple<string, DateTime, int, int, string, string>> imagesWithTimepoints = new List<Tuple<string, DateTime, int, int, string, string>>();
+            List<Tuple<string, DateTime, int, int, string, string, string>> imagesWithTimepoints = new List<Tuple<string, DateTime, int, int, string, string, string>>();
 
             var lines = File.ReadAllLines(interactionLogCSV);
             for (var i = 0; i < lines.Length; i += 1)
@@ -705,6 +706,7 @@ namespace LogvideoRecorderWinformsAndWebview2
                 int lastX = 0;
                 int lastY = 0;
                 string lastPointer = "Arrow";
+                string lastAction = "mouse_move";
 
                 var columns = lines[i].Split("\t");
                 if (File.Exists(Path.Combine(imageOutputFolder, columns[1])))
@@ -714,13 +716,15 @@ namespace LogvideoRecorderWinformsAndWebview2
                         lastX = int.Parse(columns[5]);
                         lastY = int.Parse(columns[6]);
                         lastPointer = columns[7];
+                        lastAction = columns[4];
                     }
 
-                    imagesWithTimepoints.Add(new Tuple<string, DateTime, int, int, string, string>(Path.Combine(imageOutputFolder, columns[1]),
+                    imagesWithTimepoints.Add(new Tuple<string, DateTime, int, int, string, string, string>(Path.Combine(imageOutputFolder, columns[1]),
                                                                                       new DateTime(long.Parse(columns[2])),
                                                                                       lastX,
                                                                                       lastY,
                                                                                       lastPointer,
+                                                                                      lastAction,
                                                                                       columns[0]));
                 }
 
@@ -748,13 +752,45 @@ namespace LogvideoRecorderWinformsAndWebview2
                     int mouseY = imagesWithTimepoints[i].Item4;
 
                     double durationSeconds = (nextTime - currentTime).TotalSeconds;
-                    string tempImagePath = Path.Combine(videoTempPath, imagesWithTimepoints[i].Item6 + ".png");
+                    string tempImagePath = Path.Combine(videoTempPath, imagesWithTimepoints[i].Item7 + ".png");
 
                     using (Bitmap screenshot = new Bitmap(imagePath))
-                    {
-                        // Determine mouse pointer type and load the corresponding image
-                        string pointerType = "arrow"; // Example: arrow, hand, etc.
-                        string pointerImagePath = @"D:\TIMSSNANI\Screenshots\Recorder\bin\Debug\net8.0-windows\arrow_left_button_down.png"; //GetPointerImagePath(pointerType);
+                    { 
+                        string pointerType = "Arrow";  
+                        if (imagesWithTimepoints[i].Item5 == "Arrow" && imagesWithTimepoints[i].Item6 != "mouse_move")
+                        {
+                            pointerType = "Click";
+                        }
+                        else if (imagesWithTimepoints[i].Item5 == "Hand")
+                        {
+                            pointerType = "Arrow"; // TODO
+                        }
+                        else if (imagesWithTimepoints[i].Item5 == "IBeam")
+                        {
+                            pointerType = "Arrow"; // TODO
+                        }
+                        else if (imagesWithTimepoints[i].Item5 == "Wait")
+                        {
+                            pointerType = "Arrow"; // TODO
+                        }
+                        else if (imagesWithTimepoints[i].Item5 == "Cross")
+                        {
+                            pointerType = "Arrow"; // TODO
+                        }
+                        else if (imagesWithTimepoints[i].Item5 == "Up Arrow")
+                        {
+                            pointerType = "Arrow"; // TODO
+                        }
+                        else if (imagesWithTimepoints[i].Item5 == "Size")
+                        {
+                            pointerType = "Arrow"; // TODO
+                        }
+                        else
+                        {
+                            pointerType = "Arrow";
+                        }
+
+                        string pointerImagePath = Path.Combine(Application.StartupPath, "images", pointerType +  ".png"); 
 
                         using (Bitmap pointerImage = new Bitmap(pointerImagePath))
                         {
@@ -901,7 +937,7 @@ namespace LogvideoRecorderWinformsAndWebview2
             }
 
             projectName = this.TxtProjectTitle.Text;
-             
+
             outputFolder = Path.Combine(Application.StartupPath, "output", projectName);
 
             if (!Directory.Exists(outputFolder))
@@ -960,8 +996,14 @@ namespace LogvideoRecorderWinformsAndWebview2
             {
                 Process.Start("explorer.exe", Path.Combine(Application.StartupPath, "output"));
             }
-            catch (Exception ex) { }            
- 
+            catch (Exception ex) { }
+
+        }
+
+        private void CbxURL_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (e.KeyChar == 13)
+                LoadUrl(CbxURL.Text);
         }
     }
 

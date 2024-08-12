@@ -94,6 +94,7 @@
             CbxURL.Size = new Size(1099, 33);
             CbxURL.TabIndex = 2;
             CbxURL.Text = "http:// ... (copy URL here)";
+            CbxURL.KeyPress += CbxURL_KeyPress;
             // 
             // PnlConfig
             // 
@@ -261,7 +262,7 @@
             contextMenuStrip1.ImageScalingSize = new Size(24, 24);
             contextMenuStrip1.Items.AddRange(new ToolStripItem[] { TxtProjectTitle, MenuItemStartRecording, MenuItemStopRecording, MenuItemGenerateVideo, showOutputFolderExplorerToolStripMenuItem, toolStripMenuItem1, ComboSettingScreenSizes, toolStripMenuItem2, dEvToolsToolStripMenuItem, toolStripMenuItem3, openFileToolStripMenuItem, printToPDFToolStripMenuItem, toolStripMenuItem4, exitToolStripMenuItem });
             contextMenuStrip1.Name = "contextMenuStrip1";
-            contextMenuStrip1.Size = new Size(461, 391);
+            contextMenuStrip1.Size = new Size(461, 358);
             // 
             // TxtProjectTitle
             // 

@@ -8,7 +8,11 @@ using System.Security.Cryptography;
 using Xabe.FFmpeg;
 using Xabe.FFmpeg.Downloader;
 using System.Globalization;
-using System.IO.Compression; 
+using System.IO.Compression;
+using System.Data.SQLite;
+using LogvideoRecorder;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace LogvideoRecorderWinformsAndWebview2
 {
@@ -322,7 +326,7 @@ namespace LogvideoRecorderWinformsAndWebview2
                   <h3>Quick guide</h3>
                   <ul>
                     <li>1. Copy URL (incl. http://..) into the <i>Adress</i>-bar. The page should be loaded after clicking the ►-button</li>
-                    <li>2. CLick the <i>Hamburger</i>-icon (≡) and select the window size (e.g., 1024x768).</li>
+                    <li>2. Click the <i>Hamburger</i>-icon (≡) and select the window size (e.g., 1024x768).</li>
                     <li>3. Define a <i>project name</i> in the menu (≡) by replacing the text <i>myproject-...</i>.
                     <li>4. Prepare the assessment, i.e. navigate to the last step before the <i>element</i> (i.e., item, unit, ...) of interest.</li>
                     <li>5. Start automatic screen capturing by clicking <i>Start Recording</i> in the menu (≡). Screen capturing is running, if [Recording] is shown in the status bar.</li>
@@ -339,6 +343,12 @@ namespace LogvideoRecorderWinformsAndWebview2
                     <li>All timestamps are ""ticks"". The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001 in the Gregorian calendar, which represents MinValue.</li>
                     <li>Video creation takes a particularly long time the first time the program is called up, as the necessary program component (ffmpeg) must first be downloaded once. </li>
                   </ul>
+                  <hr noshade/>
+                  <h3>Specific Instructions</h3>
+                  <h4>TIMSS 2019</h4>
+                  <p>Log event data of the TIMSS 2019 Player is saved per <i>Student ID</i> in a SQLLite database file with the following file name:</p>
+                  <ul><i>eAssessmentResults_{Player-Name}_{Student ID}_{Timestamp in UNIX epoch format}_{Index}.db</i></ul>
+                  <p>To create the combined documentation file, the <i>*.db</i> file must be copied into the <i>data</i> sub-directory. The documentation files are created in the sub-directory <i>output</i> via the menu item <i>Combine Event Data / TIMSS 2019<i>.</p>    
             </body>
         </html>";
 
@@ -659,7 +669,14 @@ namespace LogvideoRecorderWinformsAndWebview2
             {
                 // Output video path
 
-                string outputVideoPath = Path.Combine(outputFolder, "video_and_zip", projectName + "_no_mouse.mp4");
+                string outputVideoPathMP4 = Path.Combine(outputFolder, "video_and_zip", projectName + "_no_mouse.mp4");
+                string outputVideoPathwebM = Path.Combine(outputFolder, "video_and_zip", projectName + "_no_mouse.webm");
+
+                if (File.Exists(outputVideoPathMP4))
+                    File.Delete(outputVideoPathMP4);
+
+                if (File.Exists(outputVideoPathwebM))
+                    File.Delete(outputVideoPathwebM);
 
                 // Calculate frame durations based on time differences
                 List<Tuple<string, double>> imagesWithDurations = new List<Tuple<string, double>>();
@@ -688,10 +705,14 @@ namespace LogvideoRecorderWinformsAndWebview2
                     }
                 }
 
-                var conversion = FFmpeg.Conversions.New()
-                    .AddParameter($"-f concat -safe 0 -i \"{tempConcatFile}\" -vf \"scale={WebView_Width}:{WebView_Height}\" -vsync vfr -pix_fmt yuv420p -movflags +faststart {outputVideoPath}");
+                var conversion1 = FFmpeg.Conversions.New()
+                    .AddParameter($"-f concat -safe 0 -i \"{tempConcatFile}\" -vf \"scale={WebView_Width}:{WebView_Height}\" -vsync vfr -pix_fmt yuv420p -movflags +faststart {outputVideoPathMP4}");
 
-                await conversion.Start();
+                await conversion1.Start();
+
+                var conversion2 = await FFmpeg.Conversions.FromSnippet.Convert(outputVideoPathMP4, outputVideoPathwebM);
+                await conversion2.Start();
+
             }
 
         }
@@ -700,11 +721,12 @@ namespace LogvideoRecorderWinformsAndWebview2
         {
             List<Tuple<string, DateTime, int, int, string, string, string>> imagesWithTimepoints = new List<Tuple<string, DateTime, int, int, string, string, string>>();
 
+
+            int lastX = 0;
+            int lastY = 0;
             var lines = File.ReadAllLines(interactionLogCSV);
             for (var i = 0; i < lines.Length; i += 1)
             {
-                int lastX = 0;
-                int lastY = 0;
                 string lastPointer = "Arrow";
                 string lastAction = "mouse_move";
 
@@ -720,12 +742,13 @@ namespace LogvideoRecorderWinformsAndWebview2
                     }
 
                     imagesWithTimepoints.Add(new Tuple<string, DateTime, int, int, string, string, string>(Path.Combine(imageOutputFolder, columns[1]),
-                                                                                      new DateTime(long.Parse(columns[2])),
-                                                                                      lastX,
-                                                                                      lastY,
-                                                                                      lastPointer,
-                                                                                      lastAction,
-                                                                                      columns[0]));
+                                                                new DateTime(long.Parse(columns[2])),
+                                                                lastX,
+                                                                lastY,
+                                                                lastPointer,
+                                                                lastAction,
+                                                                columns[0]));
+
                 }
 
             }
@@ -739,7 +762,14 @@ namespace LogvideoRecorderWinformsAndWebview2
                 if (!Directory.Exists(videoTempPath))
                     Directory.CreateDirectory(videoTempPath);
 
-                string outputVideoPath = Path.Combine(outputFolder, "video_and_zip", projectName + "_mouse.mp4");
+                string outputVideoPathMP4 = Path.Combine(outputFolder, "video_and_zip", projectName + "_mouse.mp4");
+                string outputVideoPathwebM = Path.Combine(outputFolder, "video_and_zip", projectName + "_mouse.webm");
+
+                if (File.Exists(outputVideoPathMP4))
+                    File.Delete(outputVideoPathMP4);
+
+                if (File.Exists(outputVideoPathwebM))
+                    File.Delete(outputVideoPathwebM);
 
                 // Calculate frame durations based on time differences
                 List<Tuple<string, double>> imagesWithDurations = new List<Tuple<string, double>>();
@@ -755,8 +785,8 @@ namespace LogvideoRecorderWinformsAndWebview2
                     string tempImagePath = Path.Combine(videoTempPath, imagesWithTimepoints[i].Item7 + ".png");
 
                     using (Bitmap screenshot = new Bitmap(imagePath))
-                    { 
-                        string pointerType = "Arrow";  
+                    {
+                        string pointerType = "Arrow";
                         if (imagesWithTimepoints[i].Item5 == "Arrow" && imagesWithTimepoints[i].Item6 != "mouse_move")
                         {
                             pointerType = "Click";
@@ -790,7 +820,7 @@ namespace LogvideoRecorderWinformsAndWebview2
                             pointerType = "Arrow";
                         }
 
-                        string pointerImagePath = Path.Combine(Application.StartupPath, "images", pointerType +  ".png"); 
+                        string pointerImagePath = Path.Combine(Application.StartupPath, "images", pointerType + ".png");
 
                         using (Bitmap pointerImage = new Bitmap(pointerImagePath))
                         {
@@ -824,10 +854,13 @@ namespace LogvideoRecorderWinformsAndWebview2
                     }
                 }
 
-                var conversion = FFmpeg.Conversions.New()
-                    .AddParameter($"-f concat -safe 0 -i \"{tempConcatFile}\" -vf \"scale={WebView_Width}:{WebView_Height}\" -vsync vfr -pix_fmt yuv420p -movflags +faststart {outputVideoPath}");
+                var conversion1 = FFmpeg.Conversions.New()
+                    .AddParameter($"-f concat -safe 0 -i \"{tempConcatFile}\" -vf \"scale={WebView_Width}:{WebView_Height}\" -vsync vfr -pix_fmt yuv420p -movflags +faststart {outputVideoPathMP4}");
 
-                await conversion.Start();
+                await conversion1.Start();
+
+                var conversion2 = await FFmpeg.Conversions.FromSnippet.Convert(outputVideoPathMP4, outputVideoPathwebM);
+                await conversion2.Start();
 
                 if (Directory.Exists(videoTempPath))
                     Directory.Delete(videoTempPath, recursive: true);
@@ -948,6 +981,12 @@ namespace LogvideoRecorderWinformsAndWebview2
 
             imageOutputFolder = Path.Combine(outputFolder, "images");
 
+            if (!Directory.Exists(Path.Combine(outputFolder, "data")))
+                Directory.CreateDirectory(Path.Combine(outputFolder, "data"));
+
+            if (!Directory.Exists(Path.Combine(outputFolder, "output")))
+                Directory.CreateDirectory(Path.Combine(outputFolder, "output"));
+
             if (!Directory.Exists(Path.Combine(outputFolder, "video_and_zip")))
                 Directory.CreateDirectory(Path.Combine(outputFolder, "video_and_zip"));
 
@@ -1005,6 +1044,224 @@ namespace LogvideoRecorderWinformsAndWebview2
             if (e.KeyChar == 13)
                 LoadUrl(CbxURL.Text);
         }
-    }
 
+        private void tIMSS2019ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (Directory.Exists(Path.Combine(outputFolder, "data")))
+            {
+                string[] files = Directory.GetFiles(Path.Combine(outputFolder, "data"), "*.db");
+
+                if (files.Length == 1)
+                {
+                    // Start and Stop Time Stampe
+
+                    var lines = File.ReadAllLines(Path.Combine(outputFolder, "csv", "interactionlog_timestamp.csv"));
+                    long time_recording_started = long.MaxValue;
+                    long time_recording_ended = long.MinValue;
+                    for (var i = 0; i < lines.Length; i += 1)
+                    {
+                        var columns = lines[i].Split("\t");
+                        if (long.Parse(columns[2]) < time_recording_started)
+                            time_recording_started = long.Parse(columns[2]);
+                        if (long.Parse(columns[2]) > time_recording_ended)
+                            time_recording_ended = long.Parse(columns[2]);
+                    }
+
+                    // Prepare Root Element 
+
+                    Root root = new Root()
+                    {
+                        TsBegin = (time_recording_started - 621355968000000000) / 10000,
+                        TsBeginTimeString = new DateTime(time_recording_started, DateTimeKind.Utc).ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture),
+                        TsEnd = (time_recording_ended - 621355968000000000) / 10000,
+                        TsEndTimeString = new DateTime(time_recording_ended, DateTimeKind.Utc).ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture),
+                        TsVideoStart = (time_recording_started - 621355968000000000) / 10000,
+                        TsVideoStartTimeString = new DateTime(time_recording_started, DateTimeKind.Utc).ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture),
+                        Time = (int)((time_recording_ended - time_recording_started) / 10000000)
+                    };
+
+                    // TODO: Add open file dialog
+
+                    string connectionString = "Data Source=" + Path.Combine(outputFolder, "data", files[0]) + ";Version=3;";
+
+                    using (SQLiteConnection connection = new SQLiteConnection(connectionString))
+                    {
+                        connection.Open();
+
+                        Dictionary<int, string> _eventTypes = new Dictionary<int, string>();
+                        using (SQLiteCommand command = new SQLiteCommand("SELECT * FROM EventType", connection))
+                        {
+                            using (SQLiteDataReader reader = command.ExecuteReader())
+                            {
+                                while (reader.Read())
+                                    _eventTypes.Add(reader.GetInt32(0), reader.GetString(1).Replace(":", ""));
+                            }
+                        }
+                          
+                        using (SQLiteCommand command = new SQLiteCommand("SELECT * FROM Event", connection))
+                        {
+                            using (SQLiteDataReader reader = command.ExecuteReader())
+                            {
+                                while (reader.Read())
+                                {
+                                    int _Id = reader.GetInt32(0);
+                                    int _EventTypeId = reader.GetInt32(1);
+                                    int _ieaInstrumentId = reader.GetInt32(4);
+                                    long _CreatedDate = reader.GetInt32(9);
+                                    int _SortOrder = reader.GetInt32(11);
+                                    string _Information = reader.GetString(10);
+
+                                    // add information
+
+                                    JObject jsonObject = JObject.Parse(_Information);
+                                    jsonObject["CreatedDate"] = _CreatedDate;
+                                    jsonObject["SortOrder"] = _SortOrder;
+
+                                    if (!reader.IsDBNull(5))
+                                    {
+                                        int _ieaAiuId = reader.GetInt32(5);
+                                        jsonObject["ieaAiuId"] = _ieaAiuId;
+                                    }
+
+                                    if (!reader.IsDBNull(8))
+                                    {
+                                        int _CurrentIndex = reader.GetInt32(8);
+                                        jsonObject["CurrentIndex"] = _CurrentIndex;
+                                    }
+
+                                    string _UpdatedInformation = JsonConvert.SerializeObject(jsonObject, Formatting.Indented);
+
+
+                                    long _epoch = (_CreatedDate * 1000 + _SortOrder);
+                                    TimeSpan timeSpan = TimeSpan.FromMilliseconds(_epoch) + TimeSpan.FromHours(2);
+                                    DateTime unixEpochStart = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                                    DateTime dateTime = unixEpochStart.Add(timeSpan);
+
+                                    root.TraceLogs.Add(new TraceLog()
+                                    {
+                                        EntryId = "-1",
+                                        Name = _eventTypes[_EventTypeId],
+                                        Timestamp = (dateTime.Ticks - 621355968000000000) / 10000,
+                                        TimestampTimeString = dateTime.ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture),
+                                        Payload = _UpdatedInformation
+                                    });
+                                }
+                            }
+                        }
+
+                        using (SQLiteCommand command = new SQLiteCommand("SELECT * FROM Response", connection))
+                        {
+                            using (SQLiteDataReader reader = command.ExecuteReader())
+                            {
+                                while (reader.Read())
+                                {
+                                    int _Id = reader.GetInt32(0);
+                                    long _CreatedDate = reader.GetInt32(5);
+                                    int _SortOrder = reader.GetInt32(10);
+                                    int _ieaInstrumentId = reader.GetInt32(6);
+                                    int _ieaAiuId = reader.GetInt32(7);
+                                    
+                                    string _Information = "{}";
+
+                                    // add information
+
+                                    JObject jsonObject = JObject.Parse(_Information);
+                                    jsonObject["CreatedDate"] = _CreatedDate;
+                                    jsonObject["SortOrder"] = _SortOrder;
+                                    jsonObject["ieaInstrumentId"] = _ieaInstrumentId;
+                                    jsonObject["ieaAiuId"] = _ieaAiuId;
+
+                                    if (!reader.IsDBNull(2))
+                                    {
+                                        int _ResponseId = reader.GetInt32(2);
+                                        jsonObject["ResponseId"] = _ResponseId;
+                                    }
+
+                                    if (!reader.IsDBNull(3))
+                                    {
+                                        string _Answer = reader.GetString(3);
+                                        jsonObject["Answer"] = _Answer;
+                                    }
+
+                                    if (!reader.IsDBNull(4))
+                                    {
+                                        string _LocalizedAnswer = reader.GetString(4);
+                                        jsonObject["LocalizedAnswer"] = _LocalizedAnswer;
+                                    }
+
+                                    if (!reader.IsDBNull(8))
+                                    {
+                                        int _ieaContentItemId = reader.GetInt32(8);
+                                        jsonObject["ieaContentItemId"] = _ieaContentItemId;
+                                    }
+
+                                    if (!reader.IsDBNull(9))
+                                    {
+                                        int _PsiVariableIdentifier = reader.GetInt32(9);
+                                        jsonObject["PsiVariableIdentifier"] = _PsiVariableIdentifier;
+                                    }
+
+                                    string _UpdatedInformation = JsonConvert.SerializeObject(jsonObject, Formatting.Indented);
+                                     
+                                    long _epoch = (_CreatedDate * 1000 + _SortOrder);
+                                    TimeSpan timeSpan = TimeSpan.FromMilliseconds(_epoch) + TimeSpan.FromHours(2);
+                                    DateTime unixEpochStart = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                                    DateTime dateTime = unixEpochStart.Add(timeSpan);
+
+                                    root.TraceLogs.Add(new TraceLog()
+                                    {
+                                        EntryId = "-1",
+                                        Name = "Response",
+                                        Timestamp = (dateTime.Ticks - 621355968000000000) / 10000,
+                                        TimestampTimeString = dateTime.ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture),
+                                        Payload = _UpdatedInformation
+                                    });
+                                }
+                            }
+                        }
+
+                        root.TraceLogs = root.TraceLogs.OrderBy(obj => obj.Timestamp).ToList();
+
+                        int _EntryId = 1;
+                        foreach (var l in root.TraceLogs)
+                            l.EntryId = (_EntryId++).ToString();
+
+                        connection.Close();
+
+                       string json = JsonConvert.SerializeObject(root, Formatting.Indented);
+                        File.WriteAllText(Path.Combine(outputFolder, "documentation", "meta.json"), json);
+
+                        string _zipFileForViewer_with_mouse = Path.Combine(outputFolder, "documentation", projectName + "documentation_with_mouse.zip");
+                        string _zipFileForViewer_without_mouse = Path.Combine(outputFolder, "documentation", projectName + "documentation_without_mouse.zip");
+
+                        if (File.Exists(_zipFileForViewer_with_mouse))
+                            File.Delete(_zipFileForViewer_with_mouse);
+
+                        if (File.Exists(_zipFileForViewer_without_mouse))
+                            File.Delete(_zipFileForViewer_without_mouse);
+
+                        string _videoFileForViewer_with_mouse = Path.Combine(outputFolder, "video_and_zip", projectName + "_mouse.mp4");
+                        string _videoFileForViewer_without_mouse = Path.Combine(outputFolder, "video_and_zip", projectName + "_no_mouse.mp4");
+
+                        using (ZipArchive archive = ZipFile.Open(_zipFileForViewer_with_mouse, ZipArchiveMode.Create))
+                        {
+                            archive.CreateEntryFromFile(Path.Combine(outputFolder, "documentation", "meta.json"), "meta.json");
+                            archive.CreateEntryFromFile(_videoFileForViewer_with_mouse, "recording.mp4");
+                        }
+
+                        using (ZipArchive archive = ZipFile.Open(_zipFileForViewer_without_mouse, ZipArchiveMode.Create))
+                        {
+                            archive.CreateEntryFromFile(Path.Combine(outputFolder, "documentation", "meta.json"), "meta.json");
+                            archive.CreateEntryFromFile(_videoFileForViewer_without_mouse, "recording.mp4");
+                        }
+                    }
+
+                }
+
+            }
+          
+        }
+
+        
+    }
 }

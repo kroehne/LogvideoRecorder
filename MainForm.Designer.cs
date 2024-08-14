@@ -52,6 +52,8 @@
             MenuItemStopRecording = new ToolStripMenuItem();
             MenuItemGenerateVideo = new ToolStripMenuItem();
             showOutputFolderExplorerToolStripMenuItem = new ToolStripMenuItem();
+            combineWithEventDataToolStripMenuItem = new ToolStripMenuItem();
+            tIMSS2019ToolStripMenuItem = new ToolStripMenuItem();
             toolStripMenuItem1 = new ToolStripSeparator();
             ComboSettingScreenSizes = new ToolStripComboBox();
             toolStripMenuItem2 = new ToolStripSeparator();
@@ -78,9 +80,8 @@
             PnlNavControl.Controls.Add(PnlConfig);
             PnlNavControl.Controls.Add(PnlNavButton);
             PnlNavControl.Location = new Point(0, 0);
-            PnlNavControl.Margin = new Padding(4, 5, 4, 5);
             PnlNavControl.Name = "PnlNavControl";
-            PnlNavControl.Size = new Size(1440, 42);
+            PnlNavControl.Size = new Size(1008, 25);
             PnlNavControl.TabIndex = 0;
             // 
             // CbxURL
@@ -88,10 +89,9 @@
             CbxURL.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             CbxURL.FormattingEnabled = true;
             CbxURL.Items.AddRange(new object[] { "edge://flags/", "edge://gpu/", "edge://about/" });
-            CbxURL.Location = new Point(217, 5);
-            CbxURL.Margin = new Padding(4, 5, 4, 5);
+            CbxURL.Location = new Point(152, 3);
             CbxURL.Name = "CbxURL";
-            CbxURL.Size = new Size(1099, 33);
+            CbxURL.Size = new Size(770, 23);
             CbxURL.TabIndex = 2;
             CbxURL.Text = "http:// ... (copy URL here)";
             CbxURL.KeyPress += CbxURL_KeyPress;
@@ -101,19 +101,17 @@
             PnlConfig.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             PnlConfig.Controls.Add(BtnWidth);
             PnlConfig.Controls.Add(BtnGo);
-            PnlConfig.Location = new Point(1317, 0);
-            PnlConfig.Margin = new Padding(4, 5, 4, 5);
+            PnlConfig.Location = new Point(922, 0);
             PnlConfig.Name = "PnlConfig";
-            PnlConfig.Size = new Size(123, 42);
+            PnlConfig.Size = new Size(86, 25);
             PnlConfig.TabIndex = 1;
             // 
             // BtnWidth
             // 
             BtnWidth.Font = new Font("Arial", 12F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            BtnWidth.Location = new Point(51, 0);
-            BtnWidth.Margin = new Padding(4, 5, 4, 5);
+            BtnWidth.Location = new Point(36, 0);
             BtnWidth.Name = "BtnWidth";
-            BtnWidth.Size = new Size(70, 42);
+            BtnWidth.Size = new Size(49, 25);
             BtnWidth.TabIndex = 6;
             BtnWidth.Text = "↔ ↕";
             BtnWidth.UseVisualStyleBackColor = true;
@@ -123,9 +121,8 @@
             // 
             BtnGo.Font = new Font("Arial", 12F, FontStyle.Regular, GraphicsUnit.Point, 0);
             BtnGo.Location = new Point(0, 0);
-            BtnGo.Margin = new Padding(4, 5, 4, 5);
             BtnGo.Name = "BtnGo";
-            BtnGo.Size = new Size(36, 42);
+            BtnGo.Size = new Size(25, 25);
             BtnGo.TabIndex = 4;
             BtnGo.Text = "►";
             BtnGo.UseVisualStyleBackColor = true;
@@ -139,18 +136,16 @@
             PnlNavButton.Controls.Add(BtnForward);
             PnlNavButton.Controls.Add(BtnBack);
             PnlNavButton.Location = new Point(0, 0);
-            PnlNavButton.Margin = new Padding(4, 5, 4, 5);
             PnlNavButton.Name = "PnlNavButton";
-            PnlNavButton.Size = new Size(215, 42);
+            PnlNavButton.Size = new Size(150, 25);
             PnlNavButton.TabIndex = 0;
             // 
             // BtnStop
             // 
             BtnStop.Font = new Font("Webdings", 12F);
-            BtnStop.Location = new Point(173, 1);
-            BtnStop.Margin = new Padding(4, 5, 4, 5);
+            BtnStop.Location = new Point(121, 1);
             BtnStop.Name = "BtnStop";
-            BtnStop.Size = new Size(36, 42);
+            BtnStop.Size = new Size(25, 25);
             BtnStop.TabIndex = 3;
             BtnStop.Text = "=";
             BtnStop.UseVisualStyleBackColor = true;
@@ -159,10 +154,9 @@
             // BtnConfig
             // 
             BtnConfig.Font = new Font("Arial", 12F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            BtnConfig.Location = new Point(5, 1);
-            BtnConfig.Margin = new Padding(4, 5, 4, 5);
+            BtnConfig.Location = new Point(4, 1);
             BtnConfig.Name = "BtnConfig";
-            BtnConfig.Size = new Size(36, 42);
+            BtnConfig.Size = new Size(25, 25);
             BtnConfig.TabIndex = 5;
             BtnConfig.Text = "≡";
             BtnConfig.UseVisualStyleBackColor = true;
@@ -171,10 +165,9 @@
             // BtnReload
             // 
             BtnReload.Font = new Font("Webdings", 12F);
-            BtnReload.Location = new Point(130, 1);
-            BtnReload.Margin = new Padding(4, 5, 4, 5);
+            BtnReload.Location = new Point(91, 1);
             BtnReload.Name = "BtnReload";
-            BtnReload.Size = new Size(36, 42);
+            BtnReload.Size = new Size(25, 25);
             BtnReload.TabIndex = 2;
             BtnReload.Text = "q";
             BtnReload.UseVisualStyleBackColor = true;
@@ -183,10 +176,9 @@
             // BtnForward
             // 
             BtnForward.Font = new Font("Webdings", 12F);
-            BtnForward.Location = new Point(87, 1);
-            BtnForward.Margin = new Padding(4, 5, 4, 5);
+            BtnForward.Location = new Point(61, 1);
             BtnForward.Name = "BtnForward";
-            BtnForward.Size = new Size(36, 42);
+            BtnForward.Size = new Size(25, 25);
             BtnForward.TabIndex = 1;
             BtnForward.Text = "4";
             BtnForward.UseVisualStyleBackColor = true;
@@ -195,10 +187,9 @@
             // BtnBack
             // 
             BtnBack.Font = new Font("Webdings", 12F);
-            BtnBack.Location = new Point(49, 1);
-            BtnBack.Margin = new Padding(4, 5, 4, 5);
+            BtnBack.Location = new Point(34, 1);
             BtnBack.Name = "BtnBack";
-            BtnBack.Size = new Size(36, 42);
+            BtnBack.Size = new Size(25, 25);
             BtnBack.TabIndex = 0;
             BtnBack.Text = "3";
             BtnBack.UseVisualStyleBackColor = true;
@@ -210,10 +201,10 @@
             webView21.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             webView21.CreationProperties = null;
             webView21.DefaultBackgroundColor = Color.White;
-            webView21.Location = new Point(0, 43);
-            webView21.Margin = new Padding(5);
+            webView21.Location = new Point(0, 26);
+            webView21.Margin = new Padding(4, 3, 4, 3);
             webView21.Name = "webView21";
-            webView21.Size = new Size(1440, 974);
+            webView21.Size = new Size(1008, 584);
             webView21.TabIndex = 1;
             webView21.ZoomFactor = 1D;
             webView21.CoreWebView2InitializationCompleted += webView21_CoreWebView2InitializationCompleted;
@@ -225,80 +216,93 @@
             // 
             statusStrip1.ImageScalingSize = new Size(24, 24);
             statusStrip1.Items.AddRange(new ToolStripItem[] { statusLabelRecording, statusLabelMain, statusLabelMousePosition, statusLabelNumberImagesTaken });
-            statusStrip1.Location = new Point(0, 1018);
+            statusStrip1.Location = new Point(0, 608);
             statusStrip1.Name = "statusStrip1";
-            statusStrip1.Padding = new Padding(1, 0, 20, 0);
-            statusStrip1.Size = new Size(1440, 32);
+            statusStrip1.Size = new Size(1008, 22);
             statusStrip1.TabIndex = 2;
             statusStrip1.Text = "statusStrip1";
             // 
             // statusLabelRecording
             // 
             statusLabelRecording.Name = "statusLabelRecording";
-            statusLabelRecording.Size = new Size(19, 25);
+            statusLabelRecording.Size = new Size(12, 17);
             statusLabelRecording.Text = "-";
             // 
             // statusLabelMain
             // 
             statusLabelMain.Name = "statusLabelMain";
-            statusLabelMain.Size = new Size(19, 25);
+            statusLabelMain.Size = new Size(12, 17);
             statusLabelMain.Text = "-";
             // 
             // statusLabelMousePosition
             // 
             statusLabelMousePosition.Name = "statusLabelMousePosition";
-            statusLabelMousePosition.Size = new Size(19, 25);
+            statusLabelMousePosition.Size = new Size(12, 17);
             statusLabelMousePosition.Text = "-";
             // 
             // statusLabelNumberImagesTaken
             // 
             statusLabelNumberImagesTaken.Name = "statusLabelNumberImagesTaken";
-            statusLabelNumberImagesTaken.Size = new Size(19, 25);
+            statusLabelNumberImagesTaken.Size = new Size(12, 17);
             statusLabelNumberImagesTaken.Text = "-";
             statusLabelNumberImagesTaken.TextAlign = ContentAlignment.MiddleRight;
             // 
             // contextMenuStrip1
             // 
             contextMenuStrip1.ImageScalingSize = new Size(24, 24);
-            contextMenuStrip1.Items.AddRange(new ToolStripItem[] { TxtProjectTitle, MenuItemStartRecording, MenuItemStopRecording, MenuItemGenerateVideo, showOutputFolderExplorerToolStripMenuItem, toolStripMenuItem1, ComboSettingScreenSizes, toolStripMenuItem2, dEvToolsToolStripMenuItem, toolStripMenuItem3, openFileToolStripMenuItem, printToPDFToolStripMenuItem, toolStripMenuItem4, exitToolStripMenuItem });
+            contextMenuStrip1.Items.AddRange(new ToolStripItem[] { TxtProjectTitle, MenuItemStartRecording, MenuItemStopRecording, MenuItemGenerateVideo, showOutputFolderExplorerToolStripMenuItem, combineWithEventDataToolStripMenuItem, toolStripMenuItem1, ComboSettingScreenSizes, toolStripMenuItem2, dEvToolsToolStripMenuItem, toolStripMenuItem3, openFileToolStripMenuItem, printToPDFToolStripMenuItem, toolStripMenuItem4, exitToolStripMenuItem });
             contextMenuStrip1.Name = "contextMenuStrip1";
-            contextMenuStrip1.Size = new Size(461, 358);
+            contextMenuStrip1.Size = new Size(461, 278);
             // 
             // TxtProjectTitle
             // 
             TxtProjectTitle.BorderStyle = BorderStyle.FixedSingle;
             TxtProjectTitle.Name = "TxtProjectTitle";
-            TxtProjectTitle.Size = new Size(400, 31);
+            TxtProjectTitle.Size = new Size(400, 23);
             TxtProjectTitle.ToolTipText = "Enter Project Title";
             TxtProjectTitle.TextChanged += TxtProjectTitle_TextChanged;
             // 
             // MenuItemStartRecording
             // 
             MenuItemStartRecording.Name = "MenuItemStartRecording";
-            MenuItemStartRecording.Size = new Size(460, 32);
+            MenuItemStartRecording.Size = new Size(460, 22);
             MenuItemStartRecording.Text = "Start Recording";
             MenuItemStartRecording.Click += MenuItemStartRecording_Click;
             // 
             // MenuItemStopRecording
             // 
             MenuItemStopRecording.Name = "MenuItemStopRecording";
-            MenuItemStopRecording.Size = new Size(460, 32);
+            MenuItemStopRecording.Size = new Size(460, 22);
             MenuItemStopRecording.Text = "Stop Recording";
             MenuItemStopRecording.Click += MenuItemStopRecording_Click;
             // 
             // MenuItemGenerateVideo
             // 
             MenuItemGenerateVideo.Name = "MenuItemGenerateVideo";
-            MenuItemGenerateVideo.Size = new Size(460, 32);
+            MenuItemGenerateVideo.Size = new Size(460, 22);
             MenuItemGenerateVideo.Text = "Create ZIP Archive and Export Videos";
             MenuItemGenerateVideo.Click += exportVideoToolStripMenuItem_Click;
             // 
             // showOutputFolderExplorerToolStripMenuItem
             // 
             showOutputFolderExplorerToolStripMenuItem.Name = "showOutputFolderExplorerToolStripMenuItem";
-            showOutputFolderExplorerToolStripMenuItem.Size = new Size(460, 32);
+            showOutputFolderExplorerToolStripMenuItem.Size = new Size(460, 22);
             showOutputFolderExplorerToolStripMenuItem.Text = "Show Output Folder (Explorer)";
             showOutputFolderExplorerToolStripMenuItem.Click += showOutputFolderExplorerToolStripMenuItem_Click;
+            // 
+            // combineWithEventDataToolStripMenuItem
+            // 
+            combineWithEventDataToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { tIMSS2019ToolStripMenuItem });
+            combineWithEventDataToolStripMenuItem.Name = "combineWithEventDataToolStripMenuItem";
+            combineWithEventDataToolStripMenuItem.Size = new Size(460, 22);
+            combineWithEventDataToolStripMenuItem.Text = "Combine With Event Data";
+            // 
+            // tIMSS2019ToolStripMenuItem
+            // 
+            tIMSS2019ToolStripMenuItem.Name = "tIMSS2019ToolStripMenuItem";
+            tIMSS2019ToolStripMenuItem.Size = new Size(180, 22);
+            tIMSS2019ToolStripMenuItem.Text = "TIMSS 2019";
+            tIMSS2019ToolStripMenuItem.Click += tIMSS2019ToolStripMenuItem_Click;
             // 
             // toolStripMenuItem1
             // 
@@ -310,7 +314,7 @@
             ComboSettingScreenSizes.DropDownStyle = ComboBoxStyle.DropDownList;
             ComboSettingScreenSizes.Items.AddRange(new object[] { "1024 x 600", "1024 x 768 ", "1280 x 720 ", "1280 x 768 ", "1280 x 800", "1366 x 768", "1920 x 1080" });
             ComboSettingScreenSizes.Name = "ComboSettingScreenSizes";
-            ComboSettingScreenSizes.Size = new Size(400, 33);
+            ComboSettingScreenSizes.Size = new Size(400, 23);
             ComboSettingScreenSizes.SelectedIndexChanged += ComboSettingScreenSizes_SelectedIndexChanged;
             // 
             // toolStripMenuItem2
@@ -321,7 +325,7 @@
             // dEvToolsToolStripMenuItem
             // 
             dEvToolsToolStripMenuItem.Name = "dEvToolsToolStripMenuItem";
-            dEvToolsToolStripMenuItem.Size = new Size(460, 32);
+            dEvToolsToolStripMenuItem.Size = new Size(460, 22);
             dEvToolsToolStripMenuItem.Text = "Show DevTools";
             dEvToolsToolStripMenuItem.Click += dEvToolsToolStripMenuItem_Click;
             // 
@@ -333,14 +337,14 @@
             // openFileToolStripMenuItem
             // 
             openFileToolStripMenuItem.Name = "openFileToolStripMenuItem";
-            openFileToolStripMenuItem.Size = new Size(460, 32);
+            openFileToolStripMenuItem.Size = new Size(460, 22);
             openFileToolStripMenuItem.Text = "Open Local File in Browser";
             openFileToolStripMenuItem.Click += openFileToolStripMenuItem_Click;
             // 
             // printToPDFToolStripMenuItem
             // 
             printToPDFToolStripMenuItem.Name = "printToPDFToolStripMenuItem";
-            printToPDFToolStripMenuItem.Size = new Size(460, 32);
+            printToPDFToolStripMenuItem.Size = new Size(460, 22);
             printToPDFToolStripMenuItem.Text = "Print Current Page to PDF (Experimental)";
             printToPDFToolStripMenuItem.Click += printToPDFToolStripMenuItem_Click;
             // 
@@ -352,7 +356,7 @@
             // exitToolStripMenuItem
             // 
             exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            exitToolStripMenuItem.Size = new Size(460, 32);
+            exitToolStripMenuItem.Size = new Size(460, 22);
             exitToolStripMenuItem.Text = "Exit";
             exitToolStripMenuItem.Click += exitToolStripMenuItem_Click;
             // 
@@ -368,13 +372,12 @@
             // 
             // MainForm
             // 
-            AutoScaleDimensions = new SizeF(10F, 25F);
+            AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1440, 1050);
+            ClientSize = new Size(1008, 630);
             Controls.Add(statusStrip1);
             Controls.Add(webView21);
             Controls.Add(PnlNavControl);
-            Margin = new Padding(4, 5, 4, 5);
             Name = "MainForm";
             StartPosition = FormStartPosition.CenterScreen;
             PnlNavControl.ResumeLayout(false);
@@ -425,5 +428,7 @@
         private ToolStripStatusLabel statusLabelRecording;
         private ToolStripMenuItem showOutputFolderExplorerToolStripMenuItem;
         private ToolStripSeparator toolStripMenuItem4;
+        private ToolStripMenuItem combineWithEventDataToolStripMenuItem;
+        private ToolStripMenuItem tIMSS2019ToolStripMenuItem;
     }
 }

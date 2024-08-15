@@ -348,8 +348,10 @@ namespace LogvideoRecorderWinformsAndWebview2
                   <h4>TIMSS 2019</h4>
                   <p>Log event data of the TIMSS 2019 Player is saved per <i>Student ID</i> in a SQLLite database file with the following file name:</p>
                   <ul><i>eAssessmentResults_{Player-Name}_{Student ID}_{Timestamp in UNIX epoch format}_{Index}.db</i></ul>
-                  <p>To create the combined documentation file, the <i>*.db</i> file must be copied into the <i>data</i> sub-directory. The documentation files are created in the sub-directory <i>output</i> via the menu item <i>Combine Event Data / TIMSS 2019<i>.</p>    
-            </body>
+                  <p>To create the combined documentation file, the <i>*.db</i> file must be copied into the <i>data</i> sub-directory. The documentation files are created in the sub-directory <i>output</i> via the menu item <i>Combine Event Data / TIMSS 2019</i>. Note that after stopping the recording the entry <i>Create ZIP Archive and Export Videos</i> must be selected first.</p>
+                  <hr noshade/>
+                  <p>The current dev release of the player can be found here: https://quark-s.github.io/tba-logviewer/</p>
+                  </body>
         </html>";
 
             webView21.NavigateToString(html);
@@ -984,8 +986,8 @@ namespace LogvideoRecorderWinformsAndWebview2
             if (!Directory.Exists(Path.Combine(outputFolder, "data")))
                 Directory.CreateDirectory(Path.Combine(outputFolder, "data"));
 
-            if (!Directory.Exists(Path.Combine(outputFolder, "output")))
-                Directory.CreateDirectory(Path.Combine(outputFolder, "output"));
+            if (!Directory.Exists(Path.Combine(outputFolder, "documentation")))
+                Directory.CreateDirectory(Path.Combine(outputFolder, "documentation"));
 
             if (!Directory.Exists(Path.Combine(outputFolder, "video_and_zip")))
                 Directory.CreateDirectory(Path.Combine(outputFolder, "video_and_zip"));

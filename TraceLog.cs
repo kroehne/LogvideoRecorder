@@ -9,52 +9,48 @@ namespace LogvideoRecorder
     public class Root
     {
         [JsonProperty("ts_begin")]
-        public long TsBegin { get; set; }
+        public long TsBegin { get; set; } = -1;
 
         [JsonProperty("ts_begin_timestring")]
-        public string TsBeginTimeString { get; set; }
+        public string TsBeginTimeString { get; set; } = "";
 
         [JsonProperty("ts_video_start")]
-        public long TsVideoStart { get; set; }
+        public long TsVideoStart { get; set; } = -1;
 
         [JsonProperty("ts_video_start_timestring")]
-        public string TsVideoStartTimeString { get; set; }
+        public string TsVideoStartTimeString { get; set; } = "";
 
         [JsonProperty("ts_end")]
-        public long TsEnd { get; set; }
+        public long TsEnd { get; set; } = -1;
 
         [JsonProperty("ts_end_timestring")]
-        public string TsEndTimeString { get; set; }
+        public string TsEndTimeString { get; set; } = "";
 
         [JsonProperty("time")]
         public int Time { get; set; }
 
         [JsonProperty("traceLogs")]
-        public List<TraceLog> TraceLogs { get; set; }
-
-        public Root() 
-        {
-            TraceLogs = new List<TraceLog>(); 
-        }
+        public List<TraceLog> TraceLogs { get; set; } = new List<TraceLog>();
+ 
     }
 
     public class TraceLog
     {
         [JsonProperty("name")]
-        public string Name { get; set; }
+        public string Name { get; set; } = "";
 
         [JsonProperty("payload")]
         [JsonConverter(typeof(RawJsonConverter))]
-        public string Payload { get; set; }
+        public string Payload { get; set; } = "";
 
         [JsonProperty("timestamp")]
-        public long Timestamp { get; set; }
+        public long Timestamp { get; set; } = -1;
 
         [JsonProperty("timestamp_timestring")]
-        public string TimestampTimeString { get; set; }
+        public string TimestampTimeString { get; set; } = "";
 
         [JsonProperty("entryId")]
-        public string EntryId { get; set; }
+        public string EntryId { get; set; } = "";
     }
 
     public class RawJsonConverter : JsonConverter

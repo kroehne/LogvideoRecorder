@@ -13,6 +13,8 @@ using System.Data.SQLite;
 using LogvideoRecorder;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.Windows.Forms;
+using System.Diagnostics.Eventing.Reader;
 
 namespace LogvideoRecorderWinformsAndWebview2
 {
@@ -99,6 +101,8 @@ namespace LogvideoRecorderWinformsAndWebview2
             using (var curProcess = Process.GetCurrentProcess())
             using (var curModule = curProcess.MainModule)
             {
+                if (curModule == null)
+                    return -1;
                 return SetWindowsHookEx(idHook, proc, GetModuleHandle(curModule.ModuleName), 0);
             }
         }
@@ -255,10 +259,7 @@ namespace LogvideoRecorderWinformsAndWebview2
         #endregion
 
         private System.Windows.Forms.Timer screenshotTimer;
-        private int ScreenshotCounter = 0;
-
-
-
+   
         public MainForm()
         {
             InitializeComponent();
@@ -370,21 +371,26 @@ namespace LogvideoRecorderWinformsAndWebview2
             ComboSettingScreenSizes.SelectedIndex = 3;
         }
 
+        private void CoreWebView2_ContextMenuRequested(object? sender, CoreWebView2ContextMenuRequestedEventArgs e)
+        {
+            e.Handled = true;
+        }
+
         private void WebView21_LostFocus(object? sender, EventArgs e)
         {
-            LogEvent("lost_focus", sender.ToString());
+            if (sender == null)
+                LogEvent("lost_focus", "");
+            else
+                LogEvent("lost_focus", sender.ToString());
         }
 
         private void WebView21_GotFocus(object? sender, EventArgs e)
         {
-            LogEvent("got_focus", sender.ToString());
-        }
-
-        private void CoreWebView2_ContextMenuRequested(object sender, CoreWebView2ContextMenuRequestedEventArgs e)
-        {
-            // Set Handled to true to suppress the default context menu
-            e.Handled = true;
-        }
+            if (sender == null)
+                LogEvent("got_focus", "");
+            else
+                LogEvent("got_focus", sender.ToString());
+        } 
 
         private void ScreenshotTimer_Tick(object? sender, EventArgs e)
         {
@@ -392,7 +398,7 @@ namespace LogvideoRecorderWinformsAndWebview2
                 CaptureScreenshot("Timer");
         }
 
-        Bitmap lastImage = null;
+        Bitmap? lastImage;
         bool processing = false;
         private async void CaptureScreenshot(string reason)
         {
@@ -554,7 +560,7 @@ namespace LogvideoRecorderWinformsAndWebview2
                 {
                     webView21.CoreWebView2.Navigate(url);
                 }
-                catch (Exception ex) { }
+                catch { }
             }
         }
 
@@ -939,7 +945,10 @@ namespace LogvideoRecorderWinformsAndWebview2
 
         private void ComboSettingScreenSizes_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (ComboSettingScreenSizes.SelectedIndex != -1)
+            if (ComboSettingScreenSizes == null)
+                return;
+
+            if (ComboSettingScreenSizes.SelectedIndex != -1 && ComboSettingScreenSizes.Items.Count>0)
             {
                 string _size = ComboSettingScreenSizes.Items[ComboSettingScreenSizes.SelectedIndex].ToString();
                 string[] _dims = _size.Split('x');
@@ -1037,7 +1046,7 @@ namespace LogvideoRecorderWinformsAndWebview2
             {
                 Process.Start("explorer.exe", Path.Combine(Application.StartupPath, "output"));
             }
-            catch (Exception ex) { }
+            catch { }
 
         }
 

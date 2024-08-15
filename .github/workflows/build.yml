@@ -14,7 +14,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
 
     - name: Set up .NET
       uses: actions/setup-dotnet@v3
@@ -35,7 +35,7 @@ jobs:
         makensis /V3 /DOutFile=LogvideoRecorder_Installer.exe installer.nsi
 
     - name: Upload Installer
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: LogvideoRecorder_Installer
         path: LogvideoRecorder_Installer.exe

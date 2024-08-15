@@ -1,0 +1,41 @@
+name: Build and Create Installer
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '8.x'
+
+    - name: Restore NuGet packages
+      run: dotnet restore
+
+    - name: Build the application
+      run: dotnet build --configuration Release
+
+    - name: Install NSIS
+      run: choco install nsis -y
+
+    - name: Create Installer
+      run: |
+        makensis /V3 /DOutFile=LogvideoRecorder_Installer.exe installer.nsi
+
+    - name: Upload Installer
+      uses: actions/upload-artifact@v3
+      with:
+        name: LogvideoRecorder_Installer
+        path: LogvideoRecorder_Installer.exe

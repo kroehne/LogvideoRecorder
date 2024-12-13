@@ -15,6 +15,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Windows.Forms;
 using System.Diagnostics.Eventing.Reader;
+using System.Drawing;
 
 namespace LogvideoRecorderWinformsAndWebview2
 {
@@ -30,6 +31,9 @@ namespace LogvideoRecorderWinformsAndWebview2
         private const int WebView_Border_Top = 90;
         private static int WebView_Width = 1280;
         private static int WebView_Height = 768;
+         
+        private static int Selected_Width = 1280;
+        private static int Selected_Height = 768;
 
         private static int form_x = 0;
         private static int form_y = 0;
@@ -59,6 +63,10 @@ namespace LogvideoRecorderWinformsAndWebview2
         [DllImport("kernel32.dll")]
         private static extern IntPtr GetModuleHandle(string lpModuleName);
 
+        [DllImport("user32.dll")] 
+        private static extern short GetAsyncKeyState(int vKey);
+
+
         // Constants for mouse and keyboard hooks
         private const int WH_MOUSE_LL = 14;
         private const int WH_KEYBOARD_LL = 13;
@@ -72,6 +80,10 @@ namespace LogvideoRecorderWinformsAndWebview2
         private const int WM_MOUSEWHEEL = 0x020A;
         private const int WM_KEYDOWN = 0x0100;
         private const int WM_KEYUP = 0x0101;
+        private const int VK_MENU = 0x12;
+        private const int VK_CONTROL = 0x11;
+        private const int VK_SHIFT = 0x10;    
+
 
         [DllImport("user32.dll")]
         private static extern IntPtr GetCursor();
@@ -150,7 +162,9 @@ namespace LogvideoRecorderWinformsAndWebview2
                     cursorType = "Size";
                 }
 
-                if (posx >= 0 && posx <= WebView_Width && posy >= 0 && posy <= WebView_Height)
+                // TODO
+
+                if (posx >= 0 && posx <= Selected_Width && posy >= 0 && posy <= Selected_Height)
                 {
                     string eventtype = "mouse_move";
                     string arguments = $"{posx}\t{posy}\t{cursorType}";
@@ -196,18 +210,36 @@ namespace LogvideoRecorderWinformsAndWebview2
             if (nCode >= 0)
             {
                 int vkCode = Marshal.ReadInt32(lParam);
-                string eventtype = "";
-                string arguments = "";
+                string arguments = $"{((Keys)vkCode).ToString()}";
 
+
+                if ((GetAsyncKeyState(VK_CONTROL) & 0x8000) != 0)
+                {
+                    arguments += "|Ctrl";
+                }
+
+                if ((GetAsyncKeyState(VK_SHIFT) & 0x8000) != 0)
+                {
+                    arguments += "|Shift";
+                }
+
+                if ((GetAsyncKeyState(VK_MENU) & 0x8000) != 0)
+                {
+                    arguments += "|Alt";
+                }
+
+                string eventtype = "";
                 switch ((int)wParam)
                 {
                     case WM_KEYDOWN:
                         eventtype = "key_down";
-                        arguments = $"{((Keys)vkCode).ToString()}";
                         break;
                     case WM_KEYUP:
-                        eventtype = "key_up";
-                        arguments = $"{((Keys)vkCode).ToString()}";
+                        eventtype = "key_up"; 
+                        if (vkCode == 32 && (GetAsyncKeyState(VK_CONTROL) & 0x8000) != 0)
+                        {
+                            Toggle();
+                        } 
                         break;
                 }
 
@@ -417,7 +449,7 @@ namespace LogvideoRecorderWinformsAndWebview2
                             long timestamp = DateTime.Now.Ticks;
                             currentImageName = $"{imageCounter++}_{timestamp}.png";
 
-                            var resizedImage = ResizeImage(newImage, WebView_Width, WebView_Height);
+                            var resizedImage = ResizeImage(newImage, Selected_Width, Selected_Height);
                             resizedImage.Save(Path.Combine(imageOutputFolder, currentImageName));
 
                             File.AppendAllText(videoTimestampCSV, $"{currentImageName}\t{timestamp}\t{reason}" + Environment.NewLine);
@@ -484,11 +516,15 @@ namespace LogvideoRecorderWinformsAndWebview2
 
         private void MainForm_UpdatePosition()
         {
+
+            Selected_Width = this.Width - 22;
+            Selected_Height = this.Height  - 132;
+
             form_x = this.Location.X + webView21.Left + (this.Width - webView21.Width) / 2;
             form_y = this.Location.Y + WebView_Border_Top;
             form_width = this.Width - webView21.Left - webView21.Right;
             form_height = this.Height - webView21.Location.Y - webView21.Bottom;
-            statusLabelMain.Text = "Current Size: " + webView21.Width.ToString() + " x " + webView21.Height.ToString();
+            statusLabelMain.Text = "Current Size: " + Selected_Width.ToString() + " x " + Selected_Height.ToString();
         }
 
 
@@ -576,7 +612,7 @@ namespace LogvideoRecorderWinformsAndWebview2
         {
             Point point = new Point(BtnConfig.Location.X, BtnConfig.Location.Y + BtnConfig.Size.Height);
             contextMenuStrip1.Show(PnlNavButton.PointToScreen(point));
-
+                
         }
 
         private void dEvToolsToolStripMenuItem_Click(object sender, EventArgs e)
@@ -727,8 +763,40 @@ namespace LogvideoRecorderWinformsAndWebview2
 
         private static async Task CreateVideoWithMouse()
         {
-            List<Tuple<string, DateTime, int, int, string, string, string>> imagesWithTimepoints = new List<Tuple<string, DateTime, int, int, string, string, string>>();
+           var _cursorDict = new (string Name, Cursor Cursor)[]
+           {
+                ("AppStarting", Cursors.AppStarting),
+                ("Arrow", Cursors.Arrow),
+                ("Cross", Cursors.Cross),
+                ("Default", Cursors.Default),
+                ("IBeam", Cursors.IBeam),
+                ("No", Cursors.No),
+                ("SizeAll", Cursors.SizeAll),
+                ("SizeNESW", Cursors.SizeNESW),
+                ("SizeNS", Cursors.SizeNS),
+                ("SizeNWSE", Cursors.SizeNWSE),
+                ("SizeWE", Cursors.SizeWE),
+                ("UpArrow", Cursors.UpArrow),
+                ("Wait", Cursors.WaitCursor),
+                ("Help", Cursors.Help),
+                ("HSplit", Cursors.HSplit),
+                ("VSplit", Cursors.VSplit),
+                ("NoMove2D", Cursors.NoMove2D),
+                ("NoMoveHoriz", Cursors.NoMoveHoriz),
+                ("NoMoveVert", Cursors.NoMoveVert),
+                ("PanEast", Cursors.PanEast),
+                ("PanNE", Cursors.PanNE),
+                ("PanNorth", Cursors.PanNorth),
+                ("PanNW", Cursors.PanNW),
+                ("PanSE", Cursors.PanSE),
+                ("PanSouth", Cursors.PanSouth),
+                ("PanSW", Cursors.PanSW),
+                ("PanWest", Cursors.PanWest),
+                ("Hand", Cursors.Hand)
+           }.ToDictionary<string, Cursor>();
 
+
+            List<Tuple<string, DateTime, int, int, string, string, string>> imagesWithTimepoints = new List<Tuple<string, DateTime, int, int, string, string, string>>();
 
             int lastX = 0;
             int lastY = 0;
@@ -794,54 +862,38 @@ namespace LogvideoRecorderWinformsAndWebview2
 
                     using (Bitmap screenshot = new Bitmap(imagePath))
                     {
-                        string pointerType = "Arrow";
-                        if (imagesWithTimepoints[i].Item5 == "Arrow" && imagesWithTimepoints[i].Item6 != "mouse_move")
-                        {
-                            pointerType = "Click";
-                        }
-                        else if (imagesWithTimepoints[i].Item5 == "Hand")
-                        {
-                            pointerType = "Arrow"; // TODO
-                        }
-                        else if (imagesWithTimepoints[i].Item5 == "IBeam")
-                        {
-                            pointerType = "Arrow"; // TODO
-                        }
-                        else if (imagesWithTimepoints[i].Item5 == "Wait")
-                        {
-                            pointerType = "Arrow"; // TODO
-                        }
-                        else if (imagesWithTimepoints[i].Item5 == "Cross")
-                        {
-                            pointerType = "Arrow"; // TODO
-                        }
-                        else if (imagesWithTimepoints[i].Item5 == "Up Arrow")
-                        {
-                            pointerType = "Arrow"; // TODO
-                        }
-                        else if (imagesWithTimepoints[i].Item5 == "Size")
-                        {
-                            pointerType = "Arrow"; // TODO
-                        }
-                        else
-                        {
-                            pointerType = "Arrow";
-                        }
+                        Cursor cursor = Cursors.Arrow;
+                         
+                        if(_cursorDict.ContainsKey(imagesWithTimepoints[i].Item5))
+                            cursor = _cursorDict[imagesWithTimepoints[i].Item5];
 
-                        string pointerImagePath = Path.Combine(Application.StartupPath, "images", pointerType + ".png");
+                        using (Graphics g = Graphics.FromImage(screenshot))
+                        { 
+                            g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
 
-                        using (Bitmap pointerImage = new Bitmap(pointerImagePath))
-                        {
-                            // Create a graphics object to draw on the screenshot
-                            using (Graphics graphics = Graphics.FromImage(screenshot))
-                            {
-                                // Draw the mouse pointer at the specified coordinates
-                                graphics.DrawImage(pointerImage, mouseX, mouseY, pointerImage.Width, pointerImage.Height);
-                            }
+                            if (imagesWithTimepoints[i].Item6 == "right_button_down")
+                                g.FillEllipse(new SolidBrush(Color.FromArgb(128, Color.Green)), mouseX - 16, mouseY - 16, 32, 32);
+                            else if (imagesWithTimepoints[i].Item6 == "right_button_up")
+                                g.FillEllipse(new SolidBrush(Color.FromArgb(64, Color.Green)), mouseX - 16, mouseY - 16, 32, 32);
+                            else if (imagesWithTimepoints[i].Item6 == "left_button_down")
+                                g.FillEllipse(new SolidBrush(Color.FromArgb(128, Color.Blue)), mouseX - 16, mouseY - 16, 32, 32);
+                            else if (imagesWithTimepoints[i].Item6 == "left_button_up")
+                                g.FillEllipse(new SolidBrush(Color.FromArgb(64, Color.Blue)), mouseX - 16, mouseY - 16, 32, 32);
+                            else if (imagesWithTimepoints[i].Item6 == "wheel_down")
+                                g.FillEllipse(new SolidBrush(Color.FromArgb(128, Color.Yellow)), mouseX - 16, mouseY - 16, 32, 32);
+                            else if (imagesWithTimepoints[i].Item6 == "wheel_up")
+                                g.FillEllipse(new SolidBrush(Color.FromArgb(64, Color.Yellow)), mouseX - 16, mouseY - 16, 32, 32);
+                            else if (imagesWithTimepoints[i].Item6 == "middle_button_down")
+                                g.FillEllipse(new SolidBrush(Color.FromArgb(128, Color.Orange)), mouseX - 16, mouseY - 16, 32, 32);
+                            else if (imagesWithTimepoints[i].Item6 == "middle_button_up")
+                                g.FillEllipse(new SolidBrush(Color.FromArgb(64, Color.Orange)), mouseX - 16, mouseY - 16, 32, 32);
+                            else if (imagesWithTimepoints[i].Item6 != "mouse_move")
+                                g.FillEllipse(new SolidBrush(Color.FromArgb(128, Color.Red)), mouseX - 16, mouseY - 16, 32, 32);
 
-                            // Save the modified screenshot
-                            screenshot.Save(tempImagePath, System.Drawing.Imaging.ImageFormat.Png);
-                        }
+                            Bitmap cursorBitmap = ConvertCursorToBitmap(cursor);
+                            g.DrawImage(cursorBitmap, new Rectangle(mouseX, mouseY, 32, 32));
+                        } 
+                        screenshot.Save(tempImagePath, ImageFormat.Png);
                     }
 
                     imagesWithDurations.Add(new Tuple<string, double>(tempImagePath, durationSeconds));
@@ -874,6 +926,17 @@ namespace LogvideoRecorderWinformsAndWebview2
                     Directory.Delete(videoTempPath, recursive: true);
             }
 
+        }
+
+        static Bitmap ConvertCursorToBitmap(Cursor cursor)
+        { 
+            Bitmap bitmap = new Bitmap(cursor.Size.Width, cursor.Size.Height);
+            using (Graphics g = Graphics.FromImage(bitmap))
+            { 
+                g.Clear(Color.Transparent); 
+                cursor.Draw(g, new Rectangle(0, 0, cursor.Size.Width, cursor.Size.Height));
+            }
+            return bitmap;
         }
 
         static void CreateZip()
@@ -973,6 +1036,7 @@ namespace LogvideoRecorderWinformsAndWebview2
             this.MenuItemStartRecording.Enabled = false;
             this.MenuItemStopRecording.Enabled = true;
             this.TxtProjectTitle.Enabled = false;
+            this.CbxURL.BackColor = Color.Red;
 
             if (this.TxtProjectTitle.Text.Trim() == "")
             {
@@ -1015,6 +1079,7 @@ namespace LogvideoRecorderWinformsAndWebview2
 
         private void Stop()
         {
+            this.CbxURL.BackColor = Color.White;
             this.MenuItemStartRecording.Enabled = true;
             this.MenuItemStopRecording.Enabled = false;
             this.MenuItemGenerateVideo.Enabled = true;
@@ -1032,12 +1097,23 @@ namespace LogvideoRecorderWinformsAndWebview2
         {
             Start();
         }
-
-
-
+         
         private void MenuItemStopRecording_Click(object sender, EventArgs e)
         {
             Stop();
+        }
+
+        private static void Toggle()
+        {
+            var form = Application.OpenForms[0] as MainForm;
+            form?.Invoke((Action)(() =>
+            {
+            if (isRecording)
+                form.Stop();
+            else
+                form.Start();
+            }));
+            
         }
 
         private void showOutputFolderExplorerToolStripMenuItem_Click(object sender, EventArgs e)

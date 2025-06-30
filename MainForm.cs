@@ -16,6 +16,13 @@ using Newtonsoft.Json.Linq;
 using System.Windows.Forms;
 using System.Diagnostics.Eventing.Reader;
 using System.Drawing;
+using System.Xml.Linq;
+using System.Xml;
+using System.Text.RegularExpressions;
+using System.Data.SqlClient;
+using System.Text.Json.Nodes;
+using System.Runtime.InteropServices.JavaScript;
+using HtmlAgilityPack;
 
 namespace LogvideoRecorderWinformsAndWebview2
 {
@@ -31,7 +38,7 @@ namespace LogvideoRecorderWinformsAndWebview2
         private const int WebView_Border_Top = 90;
         private static int WebView_Width = 1280;
         private static int WebView_Height = 768;
-         
+
         private static int Selected_Width = 1280;
         private static int Selected_Height = 768;
 
@@ -63,7 +70,7 @@ namespace LogvideoRecorderWinformsAndWebview2
         [DllImport("kernel32.dll")]
         private static extern IntPtr GetModuleHandle(string lpModuleName);
 
-        [DllImport("user32.dll")] 
+        [DllImport("user32.dll")]
         private static extern short GetAsyncKeyState(int vKey);
 
 
@@ -82,7 +89,7 @@ namespace LogvideoRecorderWinformsAndWebview2
         private const int WM_KEYUP = 0x0101;
         private const int VK_MENU = 0x12;
         private const int VK_CONTROL = 0x11;
-        private const int VK_SHIFT = 0x10;    
+        private const int VK_SHIFT = 0x10;
 
 
         [DllImport("user32.dll")]
@@ -235,11 +242,11 @@ namespace LogvideoRecorderWinformsAndWebview2
                         eventtype = "key_down";
                         break;
                     case WM_KEYUP:
-                        eventtype = "key_up"; 
+                        eventtype = "key_up";
                         if (vkCode == 32 && (GetAsyncKeyState(VK_CONTROL) & 0x8000) != 0)
                         {
                             Toggle();
-                        } 
+                        }
                         break;
                 }
 
@@ -291,7 +298,7 @@ namespace LogvideoRecorderWinformsAndWebview2
         #endregion
 
         private System.Windows.Forms.Timer screenshotTimer;
-   
+
         public MainForm()
         {
             InitializeComponent();
@@ -422,7 +429,7 @@ namespace LogvideoRecorderWinformsAndWebview2
                 LogEvent("got_focus", "");
             else
                 LogEvent("got_focus", sender.ToString());
-        } 
+        }
 
         private void ScreenshotTimer_Tick(object? sender, EventArgs e)
         {
@@ -518,7 +525,7 @@ namespace LogvideoRecorderWinformsAndWebview2
         {
 
             Selected_Width = this.Width - 22;
-            Selected_Height = this.Height  - 132;
+            Selected_Height = this.Height - 132;
 
             form_x = this.Location.X + webView21.Left + (this.Width - webView21.Width) / 2;
             form_y = this.Location.Y + WebView_Border_Top;
@@ -612,7 +619,7 @@ namespace LogvideoRecorderWinformsAndWebview2
         {
             Point point = new Point(BtnConfig.Location.X, BtnConfig.Location.Y + BtnConfig.Size.Height);
             contextMenuStrip1.Show(PnlNavButton.PointToScreen(point));
-                
+
         }
 
         private void dEvToolsToolStripMenuItem_Click(object sender, EventArgs e)
@@ -763,8 +770,8 @@ namespace LogvideoRecorderWinformsAndWebview2
 
         private static async Task CreateVideoWithMouse()
         {
-           var _cursorDict = new (string Name, Cursor Cursor)[]
-           {
+            var _cursorDict = new (string Name, Cursor Cursor)[]
+            {
                 ("AppStarting", Cursors.AppStarting),
                 ("Arrow", Cursors.Arrow),
                 ("Cross", Cursors.Cross),
@@ -793,7 +800,7 @@ namespace LogvideoRecorderWinformsAndWebview2
                 ("PanSW", Cursors.PanSW),
                 ("PanWest", Cursors.PanWest),
                 ("Hand", Cursors.Hand)
-           }.ToDictionary<string, Cursor>();
+            }.ToDictionary<string, Cursor>();
 
 
             List<Tuple<string, DateTime, int, int, string, string, string>> imagesWithTimepoints = new List<Tuple<string, DateTime, int, int, string, string, string>>();
@@ -863,12 +870,12 @@ namespace LogvideoRecorderWinformsAndWebview2
                     using (Bitmap screenshot = new Bitmap(imagePath))
                     {
                         Cursor cursor = Cursors.Arrow;
-                         
-                        if(_cursorDict.ContainsKey(imagesWithTimepoints[i].Item5))
+
+                        if (_cursorDict.ContainsKey(imagesWithTimepoints[i].Item5))
                             cursor = _cursorDict[imagesWithTimepoints[i].Item5];
 
                         using (Graphics g = Graphics.FromImage(screenshot))
-                        { 
+                        {
                             g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
 
                             if (imagesWithTimepoints[i].Item6 == "right_button_down")
@@ -892,7 +899,7 @@ namespace LogvideoRecorderWinformsAndWebview2
 
                             Bitmap cursorBitmap = ConvertCursorToBitmap(cursor);
                             g.DrawImage(cursorBitmap, new Rectangle(mouseX, mouseY, 32, 32));
-                        } 
+                        }
                         screenshot.Save(tempImagePath, ImageFormat.Png);
                     }
 
@@ -929,11 +936,11 @@ namespace LogvideoRecorderWinformsAndWebview2
         }
 
         static Bitmap ConvertCursorToBitmap(Cursor cursor)
-        { 
+        {
             Bitmap bitmap = new Bitmap(cursor.Size.Width, cursor.Size.Height);
             using (Graphics g = Graphics.FromImage(bitmap))
-            { 
-                g.Clear(Color.Transparent); 
+            {
+                g.Clear(Color.Transparent);
                 cursor.Draw(g, new Rectangle(0, 0, cursor.Size.Width, cursor.Size.Height));
             }
             return bitmap;
@@ -1011,7 +1018,7 @@ namespace LogvideoRecorderWinformsAndWebview2
             if (ComboSettingScreenSizes == null)
                 return;
 
-            if (ComboSettingScreenSizes.SelectedIndex != -1 && ComboSettingScreenSizes.Items.Count>0)
+            if (ComboSettingScreenSizes.SelectedIndex != -1 && ComboSettingScreenSizes.Items.Count > 0)
             {
                 string _size = ComboSettingScreenSizes.Items[ComboSettingScreenSizes.SelectedIndex].ToString();
                 string[] _dims = _size.Split('x');
@@ -1097,7 +1104,7 @@ namespace LogvideoRecorderWinformsAndWebview2
         {
             Start();
         }
-         
+
         private void MenuItemStopRecording_Click(object sender, EventArgs e)
         {
             Stop();
@@ -1108,12 +1115,12 @@ namespace LogvideoRecorderWinformsAndWebview2
             var form = Application.OpenForms[0] as MainForm;
             form?.Invoke((Action)(() =>
             {
-            if (isRecording)
-                form.Stop();
-            else
-                form.Start();
+                if (isRecording)
+                    form.Stop();
+                else
+                    form.Start();
             }));
-            
+
         }
 
         private void showOutputFolderExplorerToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1134,6 +1141,7 @@ namespace LogvideoRecorderWinformsAndWebview2
 
         private void tIMSS2019ToolStripMenuItem_Click(object sender, EventArgs e)
         {
+
             if (Directory.Exists(Path.Combine(outputFolder, "data")))
             {
                 string[] files = Directory.GetFiles(Path.Combine(outputFolder, "data"), "*.db");
@@ -1184,7 +1192,7 @@ namespace LogvideoRecorderWinformsAndWebview2
                                     _eventTypes.Add(reader.GetInt32(0), reader.GetString(1).Replace(":", ""));
                             }
                         }
-                          
+
                         using (SQLiteCommand command = new SQLiteCommand("SELECT * FROM Event", connection))
                         {
                             using (SQLiteDataReader reader = command.ExecuteReader())
@@ -1216,7 +1224,7 @@ namespace LogvideoRecorderWinformsAndWebview2
                                         jsonObject["CurrentIndex"] = _CurrentIndex;
                                     }
 
-                                    string _UpdatedInformation = JsonConvert.SerializeObject(jsonObject, Formatting.Indented);
+                                    string _UpdatedInformation = JsonConvert.SerializeObject(jsonObject, Newtonsoft.Json.Formatting.Indented);
 
 
                                     long _epoch = (_CreatedDate * 1000 + _SortOrder);
@@ -1247,7 +1255,7 @@ namespace LogvideoRecorderWinformsAndWebview2
                                     int _SortOrder = reader.GetInt32(10);
                                     int _ieaInstrumentId = reader.GetInt32(6);
                                     int _ieaAiuId = reader.GetInt32(7);
-                                    
+
                                     string _Information = "{}";
 
                                     // add information
@@ -1288,8 +1296,8 @@ namespace LogvideoRecorderWinformsAndWebview2
                                         jsonObject["PsiVariableIdentifier"] = _PsiVariableIdentifier;
                                     }
 
-                                    string _UpdatedInformation = JsonConvert.SerializeObject(jsonObject, Formatting.Indented);
-                                     
+                                    string _UpdatedInformation = JsonConvert.SerializeObject(jsonObject, Newtonsoft.Json.Formatting.Indented);
+
                                     long _epoch = (_CreatedDate * 1000 + _SortOrder);
                                     TimeSpan timeSpan = TimeSpan.FromMilliseconds(_epoch) + TimeSpan.FromHours(2);
                                     DateTime unixEpochStart = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
@@ -1315,7 +1323,7 @@ namespace LogvideoRecorderWinformsAndWebview2
 
                         connection.Close();
 
-                       string json = JsonConvert.SerializeObject(root, Formatting.Indented);
+                        string json = JsonConvert.SerializeObject(root, Newtonsoft.Json.Formatting.Indented);
                         File.WriteAllText(Path.Combine(outputFolder, "documentation", "meta.json"), json);
 
                         string _zipFileForViewer_with_mouse = Path.Combine(outputFolder, "documentation", projectName + "documentation_with_mouse.zip");
@@ -1346,9 +1354,357 @@ namespace LogvideoRecorderWinformsAndWebview2
                 }
 
             }
-          
+
         }
 
-        
+        // C:\Users\kroeh\LRZ Sync+Share\P-LOG-DT (Tamara Kastorff)\fuer Ulf\2015\276992211111135_Elizabeth\S_Magnetschwebebahnen
+        private void pISA2015ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            // Create and configure the FolderBrowserDialog
+            using (FolderBrowserDialog folderDialog = new FolderBrowserDialog())
+            {
+                folderDialog.Description = "Please select an output folder:";
+                folderDialog.ShowNewFolderButton = true;
+                DialogResult result = folderDialog.ShowDialog();
+
+                if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(folderDialog.SelectedPath))
+                {
+                    string _outputFolder = folderDialog.SelectedPath;
+                    string _projectName = Path.GetFileName(_outputFolder);
+
+
+                    if (Directory.Exists(Path.Combine(_outputFolder, "data")))
+                    {
+                        string[] files = Directory.GetFiles(Path.Combine(_outputFolder, "data"), "*.xml");
+                        if (files.Length >= 1)
+                        {
+                            // Start and Stop Time Stampe
+
+                            var lines = File.ReadAllLines(Path.Combine(_outputFolder, "csv", "interactionlog_timestamp.csv"));
+                            long time_recording_started = long.MaxValue;
+                            long time_recording_ended = long.MinValue;
+                            for (var i = 0; i < lines.Length; i += 1)
+                            {
+                                var columns = lines[i].Split("\t");
+                                if (long.Parse(columns[2]) < time_recording_started)
+                                    time_recording_started = long.Parse(columns[2]);
+                                if (long.Parse(columns[2]) > time_recording_ended)
+                                    time_recording_ended = long.Parse(columns[2]);
+                            }
+
+                            TimeSpan _startVideoEarly = new TimeSpan(0, 0, 30); // 30 Seconds
+
+                            DateTime _start = (new DateTime(time_recording_started).Subtract(new TimeSpan(2, 0, 0))) - _startVideoEarly;
+                            DateTime _end = (new DateTime(time_recording_ended).Subtract(new TimeSpan(2, 0, 0)));
+                            DateTime _videostart = (new DateTime(time_recording_started).Subtract(new TimeSpan(2, 0, 0)));
+
+                            Root root = new Root()
+                            {
+                                TsBegin = _start.Ticks / 10000,
+                                TsBeginTimeString = _start.ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture),
+                                TsEnd = _end.Ticks / 10000,
+                                TsEndTimeString = _end.ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture),
+                                TsVideoStart = _videostart.Ticks / 10000,
+                                TsVideoStartTimeString = _videostart.ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture),
+                                Time = (int)((time_recording_ended - time_recording_started) / 1000000)
+                            };
+
+
+                            DateTime dt1970 = new DateTime(1970, 1, 1, 0, 0, 0, 0);
+
+                            foreach (var _f in files)
+                            {
+                                var _sr = new StreamReader(_f);
+                                var _xml = CleanInvalidXmlChars(_sr.ReadToEnd());
+
+                                XDocument doc = XDocument.Parse(_xml);
+                                foreach (var _e in doc.Descendants("event"))
+                                {
+                                    string _currentElementName = (string)_e.Element("unitId");
+                                    string _currentEventName = (string)_e.Element("event_name");
+                                    string _currentItemName = (string)_e.Element("itemId");
+                                    string _time = (string)_e.Element("time");
+
+                                    // add information
+
+                                    string _Information = "{}";
+                                    JObject jsonObject = JObject.Parse(_Information);
+                                    foreach (var child in _e.Elements())
+                                    {
+                                        string name = child.Name.LocalName;
+                                        string value = child.Value;
+                                        jsonObject[name] = value;
+                                    }
+
+                                    string _UpdatedInformation = JsonConvert.SerializeObject(jsonObject, Newtonsoft.Json.Formatting.Indented);
+
+                                    if (_e.Element("time") != null)
+                                    { 
+
+                                        DateTime _eventTimeStamp = dt1970.AddMilliseconds(double.Parse((string)_e.Element("time"))).AddHours(2);
+
+                                        if (_eventTimeStamp > (_start - _startVideoEarly) &&
+                                            _eventTimeStamp < _end)
+                                        {
+                                            root.TraceLogs.Add(new TraceLog()
+                                            {
+                                                EntryId = (string)_e.Element("eventCounter"),
+                                                Name = _currentEventName,
+                                                Timestamp = _eventTimeStamp.Ticks / 10000,
+                                                TimestampTimeString = _eventTimeStamp.ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture),
+                                                Payload = _UpdatedInformation
+                                            });
+                                        }
+                                    } 
+                                } 
+                            }
+
+
+                            string json = JsonConvert.SerializeObject(root, Newtonsoft.Json.Formatting.Indented);
+                            File.WriteAllText(Path.Combine(_outputFolder, "documentation", "meta.json"), json);
+
+                            string _zipFileForViewer_with_mouse = Path.Combine(_outputFolder, "documentation", _projectName + "documentation_with_mouse.zip");
+                            string _zipFileForViewer_without_mouse = Path.Combine(_outputFolder, "documentation", _projectName + "documentation_without_mouse.zip");
+
+                            if (File.Exists(_zipFileForViewer_with_mouse))
+                                File.Delete(_zipFileForViewer_with_mouse);
+
+                            if (File.Exists(_zipFileForViewer_without_mouse))
+                                File.Delete(_zipFileForViewer_without_mouse);
+
+                            string _videoFileForViewer_with_mouse = Path.Combine(_outputFolder, "video_and_zip", _projectName + "_mouse.mp4");
+                            string _videoFileForViewer_without_mouse = Path.Combine(_outputFolder, "video_and_zip", _projectName + "_no_mouse.mp4");
+
+                            using (ZipArchive archive = ZipFile.Open(_zipFileForViewer_with_mouse, ZipArchiveMode.Create))
+                            {
+                                archive.CreateEntryFromFile(Path.Combine(_outputFolder, "documentation", "meta.json"), "meta.json");
+                                archive.CreateEntryFromFile(_videoFileForViewer_with_mouse, "recording.mp4");
+                            }
+
+                            using (ZipArchive archive = ZipFile.Open(_zipFileForViewer_without_mouse, ZipArchiveMode.Create))
+                            {
+                                archive.CreateEntryFromFile(Path.Combine(_outputFolder, "documentation", "meta.json"), "meta.json");
+                                archive.CreateEntryFromFile(_videoFileForViewer_without_mouse, "recording.mp4");
+                            }
+
+                        }
+                        else
+                        {
+                            MessageBox.Show("No XML files found in the selected folder.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            return;
+                        }
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Kein Verzeichnis ausgewählt.");
+                }
+            }
+
+        }
+
+        //C:\Users\kroeh\LRZ Sync+Share\P-LOG-DT (Tamara Kastorff)\fuer Ulf\2022\1276999100101_joerg\01_Orientation-General
+        private void pISA2022ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            // Create and configure the FolderBrowserDialog
+            using (FolderBrowserDialog folderDialog = new FolderBrowserDialog())
+            {
+                folderDialog.Description = "Please select an output folder:";
+                folderDialog.ShowNewFolderButton = true;
+                DialogResult result = folderDialog.ShowDialog();
+
+                if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(folderDialog.SelectedPath))
+                {
+                    string _outputFolder = folderDialog.SelectedPath;
+                    string _projectName = Path.GetFileName(_outputFolder);
+                     
+
+                    if (Directory.Exists(Path.Combine(_outputFolder, "data")))
+                    {
+                        string[] files = Directory.GetFiles(Path.Combine(_outputFolder, "data"), "*.json");
+                        if (files.Length >= 1)
+                        {
+                            // Start and Stop Time Stamp
+
+                            var lines = File.ReadAllLines(Path.Combine(_outputFolder, "csv", "interactionlog_timestamp.csv"));
+                            long time_recording_started = long.MaxValue;
+                            long time_recording_ended = long.MinValue;
+                            for (var i = 0; i < lines.Length; i += 1)
+                            {
+                                var columns = lines[i].Split("\t");
+                                if (long.Parse(columns[2]) < time_recording_started)
+                                    time_recording_started = long.Parse(columns[2]);
+                                if (long.Parse(columns[2]) > time_recording_ended)
+                                    time_recording_ended = long.Parse(columns[2]);
+                            }
+
+                            // Prepare Root Element 
+
+                            TimeSpan _startVideoEarly = new TimeSpan(0, 0, 30); // 30 Seconds
+
+                            DateTime _start = (new DateTime(time_recording_started).Subtract(new TimeSpan(2, 0, 0))) - _startVideoEarly;
+                            DateTime _end = (new DateTime(time_recording_ended).Subtract(new TimeSpan(2, 0, 0)));
+                            DateTime _videostart = (new DateTime(time_recording_started).Subtract(new TimeSpan(2, 0, 0)));
+
+                            Root root = new Root()
+                            {
+                                TsBegin = _start.Ticks  / 10000,
+                                TsBeginTimeString = _start.ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture),
+                                TsEnd = _end.Ticks / 10000,                                
+                                TsEndTimeString = _end.ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture),
+                                TsVideoStart = _videostart.Ticks / 10000,
+                                TsVideoStartTimeString = _videostart.ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture),
+                                Time = (int)((time_recording_ended - time_recording_started) / 1000000)
+                            }; 
+
+
+                            DateTime dt1970 = new DateTime(1970, 1, 1, 0, 0, 0, 0);
+
+
+                            foreach (var _f in files)
+                            {
+                                var _sr = new StreamReader(_f);
+                                dynamic _jsonArray = JsonConvert.DeserializeObject(_sr.ReadToEnd());
+
+                                foreach (var _event in _jsonArray)
+                                {
+                                    Dictionary<string, string> _EventValues = new Dictionary<string, string>();
+                                    string _currentItemName = "";
+                                    string _currentEventName = "";
+                                    long _epoch = 0;                                   
+
+                                    foreach (var _attribute in _event)
+                                    {
+                                        if (_attribute.Name == "event_name")
+                                            _currentEventName = _attribute.Value;
+                                        else if (_attribute.Name == "time")
+                                            _epoch = long.Parse(_attribute.Value.ToString());
+                                        else if (_attribute.Name == "unitId")
+                                            _currentItemName = _attribute.Value;
+                                        else
+                                            if (_attribute.Value.ToString() != "")
+                                        {
+
+                                            if (!_attribute.Name.StartsWith("fteData"))
+                                            {
+                                                _EventValues.Add(_attribute.Name, _attribute.Value.ToString());
+                                            }
+                                            else
+                                            {
+                                                HtmlAgilityPack.HtmlDocument hap = new HtmlAgilityPack.HtmlDocument();
+                                                hap.LoadHtml(_attribute.Value.ToString());
+
+                                                //<div class="mathTextArea"  ...
+                                                HtmlNodeCollection nodes_mathTextArea = hap.DocumentNode.SelectNodes("//div[@class='mathTextArea']");
+                                                if (nodes_mathTextArea != null)
+                                                    for (int i = 0; i < nodes_mathTextArea.Count; i++)
+                                                        _EventValues.Add(_attribute.Name.ToString() + "_mathTextArea_" + i, nodes_mathTextArea[i].InnerText);
+
+                                                //<div class="responseTextArea" 
+                                                HtmlNodeCollection nodes_responseTextArea = hap.DocumentNode.SelectNodes("//div[@class='responseTextArea']");
+                                                if (nodes_responseTextArea != null)
+                                                    for (int i = 0; i < nodes_responseTextArea.Count; i++)
+                                                        _EventValues.Add(_attribute.Name.ToString() + "_responseTextArea_" + i, nodes_responseTextArea[i].InnerText);
+
+
+                                                // TODO: Make sure to find everything from fte-cdata-blocks
+
+                                                // Consider masking free text responses
+                                            }
+
+
+
+                                        }
+
+                                    }
+
+                                    DateTime _eventTimeStamp = dt1970.AddMilliseconds(_epoch);
+
+                                    if (_eventTimeStamp > (_start - _startVideoEarly) &&
+                                        _eventTimeStamp < _end )
+                                    {
+                                        int _EventID = root.TraceLogs.Count+1;
+
+                                        // add information
+
+                                        string _Information = "{}";
+                                        JObject jsonObject = JObject.Parse(_Information);
+                                        foreach (string val in _EventValues.Keys)
+                                        {
+                                            string name = val;
+                                            string value = _EventValues[val];
+                                            jsonObject[name] = value;
+                                        }
+
+                                        string _UpdatedInformation = JsonConvert.SerializeObject(jsonObject, Newtonsoft.Json.Formatting.Indented);
+
+                                        root.TraceLogs.Add(new TraceLog()
+                                        {
+                                            EntryId = _EventID.ToString(),
+                                            Name = _currentEventName,
+                                            Timestamp = _eventTimeStamp.Ticks / 10000,
+                                            TimestampTimeString = _eventTimeStamp.ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture),
+                                            Payload = _UpdatedInformation
+                                        });
+
+
+                                    }
+
+
+                                }
+
+
+                            }
+
+
+                            string json = JsonConvert.SerializeObject(root, Newtonsoft.Json.Formatting.Indented);
+                            File.WriteAllText(Path.Combine(_outputFolder, "documentation", "meta.json"), json);
+
+                            string _zipFileForViewer_with_mouse = Path.Combine(_outputFolder, "documentation", _projectName + "documentation_with_mouse.zip");
+                            string _zipFileForViewer_without_mouse = Path.Combine(_outputFolder, "documentation", _projectName + "documentation_without_mouse.zip");
+
+                            if (File.Exists(_zipFileForViewer_with_mouse))
+                                File.Delete(_zipFileForViewer_with_mouse);
+
+                            if (File.Exists(_zipFileForViewer_without_mouse))
+                                File.Delete(_zipFileForViewer_without_mouse);
+
+                            string _videoFileForViewer_with_mouse = Path.Combine(_outputFolder, "video_and_zip", _projectName + "_mouse.mp4");
+                            string _videoFileForViewer_without_mouse = Path.Combine(_outputFolder, "video_and_zip", _projectName + "_no_mouse.mp4");
+
+                            using (ZipArchive archive = ZipFile.Open(_zipFileForViewer_with_mouse, ZipArchiveMode.Create))
+                            {
+                                archive.CreateEntryFromFile(Path.Combine(_outputFolder, "documentation", "meta.json"), "meta.json");
+                                archive.CreateEntryFromFile(_videoFileForViewer_with_mouse, "recording.mp4");
+                            }
+
+                            using (ZipArchive archive = ZipFile.Open(_zipFileForViewer_without_mouse, ZipArchiveMode.Create))
+                            {
+                                archive.CreateEntryFromFile(Path.Combine(_outputFolder, "documentation", "meta.json"), "meta.json");
+                                archive.CreateEntryFromFile(_videoFileForViewer_without_mouse, "recording.mp4");
+                            }
+
+                        }
+                        else
+                        {
+                            MessageBox.Show("No XML files found in the selected folder.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            return;
+                        }
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Kein Verzeichnis ausgewählt.");
+                }
+            }
+        }
+
+        private static string CleanInvalidXmlChars(string text)
+        {
+            string re = @"[^\x09\x0A\x0D\x20-\xD7FF\xE000-\xFFFD\x10000-x10FFFF]";
+            return Regex.Replace(text, re, "");
+        }
+
+       
     }
 }
